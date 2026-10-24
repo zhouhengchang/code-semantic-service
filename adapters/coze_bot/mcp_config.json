@@ -1,0 +1,8 @@
+{
+  "mcpServers": {
+    "code-semantic": {
+      "type": "streamable_http",
+      "url": "https://ai-interview-coach-80785.app.workbuddy.host/mcp?sharecode=YITGYXG4CY"
+    }
+  }
+}

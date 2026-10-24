@@ -1,0 +1,135 @@
+{
+  "openapi": "3.1.0",
+  "info": {
+    "title": "Code Refactor & Semantic API (x402 paid)",
+    "version": "1.0.0",
+    "description": "按次付费的代码重构与语义提取 API。未付费请求返回 402 + PAYMENT-REQUIRED 报价头，Agent 用 USDC（EIP-3009 授权）支付后重试即可。无需注册、无需 API Key。",
+    "contact": { "name": "code-refactor", "url": "https://github.com/CHANGE_ME/code-refactor" },
+    "license": { "name": "MIT" }
+  },
+  "servers": [{ "url": "https://CHANGE_ME.example.com", "description": "部署后替换为公网地址" }],
+  "x-x402": {
+    "version": 2,
+    "currency": "USDC",
+    "settlement": "circle-gateway-batching",
+    "pricing": {
+      "POST /refactor": "$0.01",
+      "POST /semantic": "$0.005",
+      "GET /health": "$0"
+    }
+  },
+  "paths": {
+    "/health": {
+      "get": {
+        "summary": "健康检查（免费）",
+        "operationId": "health",
+        "responses": {
+          "200": {
+            "description": "服务可用",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "status": { "type": "string" },
+                    "version": { "type": "string" },
+                    "model": { "type": "string" },
+                    "ollama_reachable": { "type": "boolean" }
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/refactor": {
+      "post": {
+        "summary": "代码重构（付费 $0.01 / 次）",
+        "operationId": "refactorCode",
+        "x-x402-price": "$0.01",
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "required": ["code"],
+                "properties": {
+                  "code": { "type": "string", "description": "待重构源代码" },
+                  "task": {
+                    "type": "string",
+                    "default": "现代化重构，保留业务逻辑",
+                    "description": "重构意图"
+                  },
+                  "language": { "type": "string", "description": "语言提示，可空" }
+                }
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "重构成功",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "result": { "type": "string", "description": "重构后的纯代码" },
+                    "model": { "type": "string" },
+                    "language": { "type": "string" },
+                    "billable_units": { "type": "integer" },
+                    "elapsed_ms": { "type": "integer" }
+                  }
+                }
+              }
+            }
+          },
+          "402": { "description": "需要付费，返回 PAYMENT-REQUIRED 报价头" },
+          "503": { "description": "推理后端不可用" }
+        }
+      }
+    },
+    "/semantic": {
+      "post": {
+        "summary": "代码语义提取（付费 $0.005 / 次）",
+        "operationId": "extractSemantic",
+        "x-x402-price": "$0.005",
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "required": ["code"],
+                "properties": {
+                  "code": { "type": "string" },
+                  "language": { "type": "string", "default": "python" }
+                }
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "语义摘要",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "summary": { "type": "object" },
+                    "language": { "type": "string" },
+                    "billable_units": { "type": "integer" }
+                  }
+                }
+              }
+            }
+          },
+          "402": { "description": "需要付费" }
+        }
+      }
+    }
+  }
+}

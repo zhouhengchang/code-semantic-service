@@ -1,0 +1,23 @@
+# ============================================================
+# fal 应用声明
+# ------------------------------------------------------------
+# 用法：fal deploy adapters/fal_mcp/fal_app.py::app
+# 注意：字段名按 fal 当前 CLI 约定填写，提交前请对照官方文档核对
+# ============================================================
+app: adapters/fal_mcp/fal_app.py::app
+name: code-refactor
+machine_type: CPU
+min_concurrency: 0          # 缩容到 0，避免空转计费
+max_concurrency: 10
+keep_alive: 60              # 秒，冷启动代价高，适度保活
+scaling:
+  min: 0
+  max: 5
+env:
+  - CORE_BASE_URL=http://127.0.0.1:8000
+  - OLLAMA_MODEL=deepseek-coder
+  - MCP_TRANSPORT=streamable-http
+# 计费单元单价不在此配置 —— 由 fal 团队在计费系统内设置
+billing:
+  unit_header: x-fal-billable-units
+  mode: shared

@@ -1,0 +1,9 @@
+# 核心服务运行依赖（Python 3.11+）
+fastapi>=0.110
+uvicorn[standard]>=0.27
+httpx>=0.26
+pydantic>=2.6
+
+# 说明：
+# - Ollama 走 HTTP 调用，不需要 ollama 官方 SDK
+# - 代码语义提取用标准库 ast，不需要 tree-sitter

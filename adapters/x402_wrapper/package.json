@@ -1,0 +1,22 @@
+{
+  "name": "code-refactor-x402",
+  "version": "1.0.0",
+  "private": true,
+  "description": "代码重构服务的 x402 付费包装层（USDC 按次结算，Agent 原生付费）",
+  "main": "paywalled_api.js",
+  "type": "commonjs",
+  "scripts": {
+    "start": "node paywalled_api.js",
+    "dev": "node --watch paywalled_api.js"
+  },
+  "engines": {
+    "node": ">=18"
+  },
+  "dependencies": {
+    "express": "^4.19.2",
+    "@circle-fin/x402-batching": "^1.0.0",
+    "@x402/core": "^1.0.0",
+    "@x402/evm": "^1.0.0",
+    "viem": "^2.21.0"
+  }
+}

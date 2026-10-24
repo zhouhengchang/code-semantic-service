@@ -1,0 +1,25 @@
+# 密钥与本地配置，绝对不能提交
+.env
+*.env
+!*.env.example
+deploy.env
+
+# Python
+__pycache__/
+*.py[cod]
+.venv/
+venv/
+*.egg-info/
+.pytest_cache/
+
+# 打包产物
+artifacts/
+dist/
+build/
+*.zip
+
+# 系统与编辑器
+.DS_Store
+Thumbs.db
+.idea/
+.vscode/

@@ -1,0 +1,144 @@
+# ============================================================
+# 多平台上架配置：定价 + 元信息
+# ------------------------------------------------------------
+# 原则：
+#   1. 这里只放"公开可提交"的元信息与定价，不放任何凭证。
+#   2. 所有密钥走环境变量（见 .env.example），本文件不进打包产物。
+#   3. price 单位为各平台自身货币口径，已在字段注释中说明。
+# ============================================================
+
+service:
+  name: "Code Refactor & Semantic API"
+  slug: "code-refactor"
+  version: "1.0.0"
+  tagline: "把任意语言的遗留代码重构成现代化规范代码，并输出结构化语义摘要"
+  description: |
+    基于本地大模型的代码重构服务，提供两个能力：
+    1) 重构：输入源代码 + 重构意图，输出保留业务逻辑的现代化代码；
+    2) 语义提取：纯静态分析，输出函数/类/导入/调用的结构化 JSON。
+    适合接进 Coding Agent、代码审查流水线、低代码平台。
+  category: "developer-tools"
+  tags: ["code-refactor", "code-analysis", "mcp", "legacy-modernization", "ast"]
+  homepage: "https://github.com/CHANGE_ME/code-refactor"
+  license: "MIT"
+
+# ------------------------------------------------------------
+# 各平台的定价与元信息
+# ------------------------------------------------------------
+platforms:
+  # ---------- A. fal.ai（按次计费 / shared mode）----------
+  fal:
+    enabled: true
+    mode: "shared"            # shared = 调用方承担算力成本
+    listing_type: "mcp-server"
+    pricing:
+      model: "per-call"
+      unit_price_usd: 0.01    # 由 fal 团队在计费系统里配置，代码只上报 unit 数
+      unit_rule: "code_lines"
+      tiers:
+        - { max_lines: 50,   units: 1 }
+        - { max_lines: 150,  units: 2 }
+        - { max_lines: 300,  units: 3 }
+        - { max_lines: 9999, units: 5 }
+    requirements:
+      - "需联系 fal 团队为该 app 开启 shared mode 的 admin 权限"
+      - "需请 fal 团队在计费系统中配置 unit 单价"
+    artifacts:
+      - "adapters/fal_mcp/mcp_server.py"
+      - "adapters/fal_mcp/Dockerfile"
+      - "adapters/fal_mcp/fal_app.py"
+      - "adapters/fal_mcp/fal.yaml"
+
+  # ---------- B. RunAPI / Circle x402（USDC 按次）----------
+  x402:
+    enabled: true
+    mode: "pay-per-request"
+    currency: "USDC"
+    network: "base"            # Circle Gateway 批结算支持的网络，按官方文档确认
+    seller_address_env: "X402_SELLER_ADDRESS"
+    pricing:
+      model: "per-call"
+      routes:
+        "POST /refactor": "$0.01"     # 上限受 RunAPI 约束：单次 <= 10 USDC
+        "POST /semantic": "$0.005"
+        "GET /health": "$0"
+      max_single_price_usd: 10
+    requirements:
+      - "需要 EVM 钱包地址作为 sellerAddress（USDC 直接进该地址）"
+      - "需要公网可访问的部署（Railway / Fly.io / Docker）"
+      - "需到 Circle Agent Marketplace 的 Discovery API 注册服务"
+    artifacts:
+      - "adapters/x402_wrapper/paywalled_api.js"
+      - "adapters/x402_wrapper/package.json"
+      - "adapters/x402_wrapper/openapi.json"
+      - "adapters/x402_wrapper/Dockerfile"
+
+  # ---------- C. Claw Mart（OpenClaw Skill，90% 分成）----------
+  clawmart:
+    enabled: true
+    mode: "one-time-purchase"
+    currency: "USD"
+    revenue_share:
+      creator: 0.90
+      platform: 0.10
+    pricing:
+      model: "one-time"
+      price_usd: 9            # 建议区间 $9 - $19
+      upsell_subscription_usd_month: 19
+    requirements:
+      - "需要 creator 账号"
+      - "需要 CLAWMART_API_KEY"
+    artifacts:
+      - "adapters/clawmart_skill/your-skill/"
+
+  # ---------- D. 豆包 / 扣子（65% 分成）----------
+  coze:
+    enabled: true
+    mode: "subscription-or-unlock"
+    currency: "CNY"
+    revenue_share:
+      creator: 0.65
+    pricing:
+      model: "hybrid"
+      subscription_cny_month: [18, 48]
+      single_unlock_cny: 9.9
+    requirements:
+      - "需要商户入驻 + 实名认证"
+      - "核心服务必须部署到公网（扣子工作流无法访问 localhost）"
+      - "需提交 Bot 审核（图标 512x512、封面 1200x600、演示视频 <=60s）"
+    artifacts:
+      - "adapters/coze_bot/bot_definition.json"
+      - "adapters/coze_bot/workflow_http_plugin.json"
+      - "adapters/coze_bot/SUBMIT-CHECKLIST.md"
+
+  # ---------- E. TapLaunch（下载分成）----------
+  taplaunch:
+    enabled: true
+    mode: "download-share"
+    currency: "USD"
+    pricing:
+      model: "free-publish-revenue-pool"
+      note: "免费发布，收入按总下载量比例分配给所有发布者"
+    requirements:
+      - "免费开发者账号"
+      - "需上传 zip + 描述 + 3-5 张截图"
+    artifacts:
+      - "artifacts/code-refactor-tool.zip"
+
+  # ---------- F. GitHub + x402-deploy（开源引流）----------
+  github:
+    enabled: true
+    mode: "open-source-funnel"
+    license: "MIT"
+    pricing:
+      model: "per-call"
+      default: "$0.01"
+      routes:
+        "POST /refactor": "$0.01"
+        "POST /semantic": "$0.005"
+        "GET /health": "$0"
+    requirements:
+      - "需要 GitHub 账号 + 仓库"
+      - "x402-deploy CLI 需要部署平台凭证（Railway / Fly.io / Vercel 任一）"
+    artifacts:
+      - "adapters/github_repo/"

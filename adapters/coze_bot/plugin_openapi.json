@@ -1,8 +1,8 @@
 {
   "openapi": "3.1.0",
   "info": {
-    "title": "代码重构与语义提取",
-    "description": "把遗留代码重构成现代化规范代码并保留业务逻辑；同时可提取代码结构化语义摘要、按岗位 JD 生成面试题、查询 5G 网络分析数据。",
+    "title": "代码重构与语义提取 API（扣子插件）",
+    "description": "代码重构、语义摘要、面试出题、NWDAF 分析四类能力。接入前请把服务器地址设置为 https://ai-interview-coach-80785.app.workbuddy.host",
     "version": "1.0.0"
   },
   "servers": [
@@ -25,20 +25,21 @@
                 "properties": {
                   "code": {
                     "type": "string",
-                    "description": "待重构的源代码原文"
+                    "description": "待重构的源代码全文"
                   },
                   "task": {
                     "type": "string",
-                    "description": "重构任务描述，例如「现代化重构，保留业务逻辑」「补充类型注解」「拆解超长函数」",
-                    "default": "现代化重构，保留业务逻辑"
+                    "default": "现代化重构，保持原有接口与行为不变",
+                    "description": "重构要求，留空则按默认策略"
                   },
                   "language": {
                     "type": "string",
-                    "description": "代码语言，留空则自动识别",
-                    "default": "python"
+                    "description": "语言提示，如 python / javascript / java"
                   }
                 },
-                "required": ["code"]
+                "required": [
+                  "code"
+                ]
               }
             }
           }
@@ -51,12 +52,27 @@
                 "schema": {
                   "type": "object",
                   "properties": {
-                    "result": {"type": "string", "description": "重构后的完整代码，可直接替换原文件"},
-                    "model": {"type": "string", "description": "实际使用的模型，降级时为 rule-engine"},
-                    "language": {"type": "string"},
-                    "degraded": {"type": "boolean", "description": "true 表示结果由规则引擎产出"},
-                    "billable_units": {"type": "integer"},
-                    "elapsed_ms": {"type": "integer"}
+                    "result": {
+                      "type": "string",
+                      "description": "重构后的完整代码，可直接替换原文件"
+                    },
+                    "model": {
+                      "type": "string",
+                      "description": "实际使用的模型，降级时为 rule-engine"
+                    },
+                    "language": {
+                      "type": "string"
+                    },
+                    "degraded": {
+                      "type": "boolean",
+                      "description": "true 表示结果由规则引擎产出"
+                    },
+                    "billable_units": {
+                      "type": "integer"
+                    },
+                    "elapsed_ms": {
+                      "type": "integer"
+                    }
                   }
                 }
               }
@@ -77,10 +93,19 @@
               "schema": {
                 "type": "object",
                 "properties": {
-                  "code": {"type": "string", "description": "待分析代码"},
-                  "language": {"type": "string", "description": "代码语言，默认 python", "default": "python"}
+                  "code": {
+                    "type": "string",
+                    "description": "待分析源代码全文"
+                  },
+                  "language": {
+                    "type": "string",
+                    "default": "python",
+                    "description": "代码语言"
+                  }
                 },
-                "required": ["code"]
+                "required": [
+                  "code"
+                ]
               }
             }
           }
@@ -117,19 +142,31 @@
               "schema": {
                 "type": "object",
                 "properties": {
-                  "jd": {"type": "string", "description": "岗位描述原文"},
+                  "jd": {
+                    "type": "string",
+                    "description": "岗位 JD 原文，越具体出的题越贴岗"
+                  },
                   "level": {
                     "type": "string",
-                    "description": "岗位等级：实习 / 校招 / 社招 / 高级 / 专家",
-                    "default": "社招"
+                    "enum": [
+                      "校招",
+                      "社招",
+                      "大厂"
+                    ],
+                    "default": "社招",
+                    "description": "面试难度档位，只能取 校招 / 社招 / 大厂 三者之一"
                   },
                   "history": {
                     "type": "array",
-                    "description": "已有对话，形如 [{role, content}]，首轮传空数组",
-                    "items": {"type": "object"}
+                    "description": "多轮对话历史，形如 [{role, content}]，首轮传空数组",
+                    "items": {
+                      "type": "object"
+                    }
                   }
                 },
-                "required": ["jd"]
+                "required": [
+                  "jd"
+                ]
               }
             }
           }
@@ -142,10 +179,18 @@
                 "schema": {
                   "type": "object",
                   "properties": {
-                    "question": {"type": "string"},
-                    "focus": {"type": "string"},
-                    "follow_up": {"type": "string"},
-                    "progress": {"type": "object"}
+                    "question": {
+                      "type": "string"
+                    },
+                    "focus": {
+                      "type": "string"
+                    },
+                    "follow_up": {
+                      "type": "string"
+                    },
+                    "progress": {
+                      "type": "object"
+                    }
                   }
                 }
               }
@@ -177,7 +222,9 @@
                     "default": "AMF"
                   }
                 },
-                "required": ["eventId"]
+                "required": [
+                  "eventId"
+                ]
               }
             }
           }
@@ -187,7 +234,9 @@
             "description": "分析结果",
             "content": {
               "application/json": {
-                "schema": {"type": "object"}
+                "schema": {
+                  "type": "object"
+                }
               }
             }
           }

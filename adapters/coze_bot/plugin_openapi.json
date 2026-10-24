@@ -1,0 +1,198 @@
+{
+  "openapi": "3.1.0",
+  "info": {
+    "title": "代码重构与语义提取",
+    "description": "把遗留代码重构成现代化规范代码并保留业务逻辑；同时可提取代码结构化语义摘要、按岗位 JD 生成面试题、查询 5G 网络分析数据。",
+    "version": "1.0.0"
+  },
+  "servers": [
+    {
+      "url": "https://ai-interview-coach-80785.app.workbuddy.host"
+    }
+  ],
+  "paths": {
+    "/api/code/refactor": {
+      "post": {
+        "operationId": "refactorCode",
+        "summary": "代码重构",
+        "description": "输入源代码和重构任务，返回重构后的完整代码。响应中 degraded=true 表示当前环境未接入大模型，结果由规则引擎做机械等价改造。",
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "properties": {
+                  "code": {
+                    "type": "string",
+                    "description": "待重构的源代码原文"
+                  },
+                  "task": {
+                    "type": "string",
+                    "description": "重构任务描述，例如「现代化重构，保留业务逻辑」「补充类型注解」「拆解超长函数」",
+                    "default": "现代化重构，保留业务逻辑"
+                  },
+                  "language": {
+                    "type": "string",
+                    "description": "代码语言，留空则自动识别",
+                    "default": "python"
+                  }
+                },
+                "required": ["code"]
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "重构成功",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "result": {"type": "string", "description": "重构后的完整代码，可直接替换原文件"},
+                    "model": {"type": "string", "description": "实际使用的模型，降级时为 rule-engine"},
+                    "language": {"type": "string"},
+                    "degraded": {"type": "boolean", "description": "true 表示结果由规则引擎产出"},
+                    "billable_units": {"type": "integer"},
+                    "elapsed_ms": {"type": "integer"}
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/code/semantic": {
+      "post": {
+        "operationId": "extractSemantic",
+        "summary": "代码语义提取",
+        "description": "提取代码的结构化摘要：语言、解析器、导入、类与方法、顶层函数、关键调用。适合先摸底代码结构再决定是否重构。",
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "properties": {
+                  "code": {"type": "string", "description": "待分析代码"},
+                  "language": {"type": "string", "description": "代码语言，默认 python", "default": "python"}
+                },
+                "required": ["code"]
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "摘要提取成功",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "summary": {
+                      "type": "object",
+                      "description": "结构化摘要，含 language/parser/imports/classes/functions/calls/stats"
+                    }
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/interview/start_interview": {
+      "post": {
+        "operationId": "startInterview",
+        "summary": "生成面试题",
+        "description": "根据岗位 JD 生成一道技术面试题，返回题目、考察点、追问建议与当前进度。适合做技术面试陪练。",
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "properties": {
+                  "jd": {"type": "string", "description": "岗位描述原文"},
+                  "level": {
+                    "type": "string",
+                    "description": "岗位等级：实习 / 校招 / 社招 / 高级 / 专家",
+                    "default": "社招"
+                  },
+                  "history": {
+                    "type": "array",
+                    "description": "已有对话，形如 [{role, content}]，首轮传空数组",
+                    "items": {"type": "object"}
+                  }
+                },
+                "required": ["jd"]
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "出题成功",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "question": {"type": "string"},
+                    "focus": {"type": "string"},
+                    "follow_up": {"type": "string"},
+                    "progress": {"type": "object"}
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/nwdaf/nnwdaf-analyticsinfo/v1/analytics": {
+      "post": {
+        "operationId": "nwdafAnalytics",
+        "summary": "5G 网络分析查询",
+        "description": "查询 Mock NWDAF 仿真环境（3GPP TS 29.520）的网络分析结果，例如网元负载、UE 移动性、切片 SLA。",
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "properties": {
+                  "eventId": {
+                    "type": "string",
+                    "description": "分析事件：NF_LOAD / LOAD_LEVEL_INFORMATION / UE_MOBILITY / SLICE_SLA",
+                    "default": "NF_LOAD"
+                  },
+                  "targetNfType": {
+                    "type": "string",
+                    "description": "目标网元类型：AMF / SMF / UPF",
+                    "default": "AMF"
+                  }
+                },
+                "required": ["eventId"]
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "分析结果",
+            "content": {
+              "application/json": {
+                "schema": {"type": "object"}
+              }
+            }
+          }
+        }
+      }
+    }
+  }
+}

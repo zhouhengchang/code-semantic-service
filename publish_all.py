@@ -126,7 +126,13 @@ def publish_github() -> bool:
     _run(["git", "add", "-A"], cwd=ROOT)
     _run(["git", "commit", "-m", "chore: 同步平台上架产物与适配层"], cwd=ROOT)
 
-    rc, out = _run(["git", "push", "-u", "origin", "HEAD:main", "--force"], cwd=ROOT)
+    try:
+        rc, out = _run(["git", "push", "-u", "origin", "HEAD:main"], cwd=ROOT)
+    finally:
+        # 无论成功与否，都把 token 从 .git/config 里抹掉，
+        # 否则凭证会长期以明文留在远端地址中。
+        _run(["git", "remote", "set-url", "origin", f"https://github.com/{user}/{REPO_SLUG}.git"], cwd=ROOT)
+
     if rc != 0:
         # 推送失败时把 token 从输出里抹掉，避免日志泄露凭证
         safe = out.replace(token, "***")
